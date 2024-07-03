@@ -26,7 +26,7 @@ PTE7300_I2C::PTE7300_I2C()
 {
   _nodeAddress = DEFAULT_NODE_ADDRESS;
   _bUseCRC = true; // CRC flag
-  Wire.begin(); // initiate I2C connection  
+  Wire.begin(); // initiate I2C connection
 }
 
 bool PTE7300_I2C::isConnected()
@@ -89,7 +89,7 @@ unsigned int PTE7300_I2C::readRegister(uint8_t address, unsigned int number, uin
 
 unsigned int PTE7300_I2C::readRegisterNoCRC(uint8_t address, unsigned int number, uint16_t *buffer)
 {
-  
+
   unsigned int bytesRead = 0; // default return var
 
   Wire.beginTransmission(_nodeAddress);
@@ -103,8 +103,8 @@ unsigned int PTE7300_I2C::readRegisterNoCRC(uint8_t address, unsigned int number
     for (int i = 0; i < number; i++)
     {
       byte lowByte = Wire.read(); // read low byte
-	  byte highByte = Wire.read(); // read high byte
-	  buffer[i] = highByte << 8 | lowByte; // join two bytes into word (uint16)
+  	  byte highByte = Wire.read(); // read high byte
+	    buffer[i] = (((uint16_t)highByte) << 8) | (uint16_t)lowByte; // join two bytes into word (uint16)
     }
   }
 
@@ -112,8 +112,8 @@ unsigned int PTE7300_I2C::readRegisterNoCRC(uint8_t address, unsigned int number
 }
 
 unsigned int PTE7300_I2C::readRegisterCRC(uint8_t address, unsigned int number, uint16_t *buffer)
-{	
-  
+{
+
   unsigned int bytesRead=0;
 
   unsigned int i;
@@ -123,17 +123,17 @@ unsigned int PTE7300_I2C::readRegisterCRC(uint8_t address, unsigned int number, 
   unsigned char header[2];
   unsigned char all[3+number*2];
   unsigned char node;
-  
+
   node = ((_nodeAddress << 1) & 0xFC) | 0x02; //CRC-Flag 1, Readflag 0
   header[0] = address;
   header[1] = ((number*2)-1) << 4;
   crc4 = this->calc_crc4(0x03,0x0F,header,2);
- 
-  
+
+
   all[0]=node;
   all[1]=address;
   all[2]=((number*2)-1) << 4| (crc4 & 0x0F);
-  
+
   // Calculating new CRC(read-stub)
   crc8_hold = this->calc_crc8(0xD5,0xFF,all,3);
   // Serial.println("Info: New CRC8-stub is 0x" + String(crc8_hold, HEX));
@@ -146,7 +146,7 @@ unsigned int PTE7300_I2C::readRegisterCRC(uint8_t address, unsigned int number, 
   node = ((_nodeAddress << 1) & 0xFC) | 0x03; // CRC-Flag 1, Readflag 1
   bytesRead = Wire.available();
   // Serial.println("Bytes read: " + String(bytesRead, DEC));
-  if(bytesRead >= (number*2)+1) 
+  if(bytesRead >= (number*2)+1)
   {
     for(int i=0;i<number;i++)
     {
@@ -157,12 +157,12 @@ unsigned int PTE7300_I2C::readRegisterCRC(uint8_t address, unsigned int number, 
   }
   int crc8_received = Wire.read(); // read CRC byte, after reading the databuffer words
   // Serial.println("CRC8 received: 0x" + String(crc8_received,HEX));
- 
+
   all[0]=node;
   crc8 = this->calc_crc8(0xD5, crc8_hold,all,1);
   crc8 = this->calc_crc8(0xD5, crc8,(unsigned char*)(buffer),number*2);
   // Serial.println("CRC8 calculated: 0x" + String(crc8,HEX));
-  
+
   if(crc8!=crc8_received)
   {
 	Serial.println("CRC ERROR!");
@@ -170,10 +170,10 @@ unsigned int PTE7300_I2C::readRegisterCRC(uint8_t address, unsigned int number, 
 		{
 			buffer[i]=0;
 		}
-	return 0; 
+	return 0;
   }
-  // Serial.println("No CRC error");  
-  
+  // Serial.println("No CRC error");
+
   return bytesRead;
 }
 
@@ -256,28 +256,28 @@ uint32_t PTE7300_I2C::readSERIAL()
 int16_t PTE7300_I2C::readDSP_T()
 {
   uint16_t DSP_T;
-  this->readRegister(RAM_ADDR_DSP_T, 1, &DSP_T); 
+  this->readRegister(RAM_ADDR_DSP_T, 1, &DSP_T);
   return (int16_t)(DSP_T); // type-cast to signed integer
 }
 
 int16_t PTE7300_I2C::readDSP_S()
 {
   uint16_t DSP_S;
-  this->readRegister(RAM_ADDR_DSP_S, 1, &DSP_S);  
+  this->readRegister(RAM_ADDR_DSP_S, 1, &DSP_S);
   return (int16_t)(DSP_S); // type-cast to signed integer
 }
 
 uint16_t PTE7300_I2C::readSTATUS()
 {
   uint16_t STATUS;
-  this->readRegister(RAM_ADDR_STATUS, 1, &STATUS);  
+  this->readRegister(RAM_ADDR_STATUS, 1, &STATUS);
   return STATUS; // unsigned 16-bit integer
 }
 
 int PTE7300_I2C::readADC_TC()
-{  
+{
 	uint16_t ADC_TC;
-	this->readRegister(RAM_ADDR_ADC_TC, 1, &ADC_TC);  
+	this->readRegister(RAM_ADDR_ADC_TC, 1, &ADC_TC);
 	return (int16_t)(ADC_TC); // type-cast to signed integer
 }
 
@@ -285,7 +285,7 @@ char PTE7300_I2C::calc_crc4(unsigned char polynom, unsigned char init, unsigned 
 {
   unsigned char shifter;
   int i,j;
-  
+
   shifter = init;
   for(i=0;i<len;i++)
   {
@@ -304,7 +304,7 @@ char PTE7300_I2C::calc_crc8(unsigned char polynom, unsigned char init, unsigned 
 {
   unsigned char shifter;
   int i,j;
-  
+
   shifter = init;
   for(i=0;i<len;i++)
   {
